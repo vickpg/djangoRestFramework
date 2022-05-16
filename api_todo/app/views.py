@@ -5,8 +5,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-#views quando acessamos url's, ela são "chamadas". Evia dados e recebe dados. Primeiro método para acessar view será GET. Depois disso, precisamos registrar uma url que chame essa função quando for acessada. Para usar os métodos criamos validações para saber quando chamar cada uma, em situações diferentes.
-@api_view(['GET', 'POST'])
+#views: quando acessamos url's, ela são "chamadas". Evia dados e recebe dados. Primeiro método para acessar view será GET. Depois disso, precisamos registrar uma url que chame essa função quando for acessada. Para usar os métodos criamos validações para saber quando chamar cada uma, em situações diferentes.
+#decorators: usados para restringir acesso de uma view baseado em um método de requisição.
+@api_view(['GET', 'POST']) 
 def todo_list(request):
     if request.method == 'GET': 
         todo = Todo.objects.all()
@@ -18,5 +19,27 @@ def todo_list(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def todo_detail_change_and_delete(request, pk):
+    try:
+        todo = Todo.objects.get(pk=pk)
+    except Todo.DoesNotExists:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = TodoSerializer(todo)
+        return Response(serializer.data)
+    elif request.method == 'PUT':
+        serializer = TodoSerializer(todo, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        todo.delete()
+        return Response(status=status.HTTP_204_NOT_CONTENT)
+
+
 
 
